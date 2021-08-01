@@ -3,12 +3,20 @@
 
 <h1>Representation of People of Color at the Oscars 1927 - 2019</h1>
 
+<p>
+    Representation of POC at the Oscars began rising starting in the 1980's, peaking in 2016 at 20%.
+    Since 40% of Americans are POC, this peak is roughly half of what it should be.
+    Therefore, despite recent increases in POC nominees this rate is still far too low.
+</p>
+
+<p>Try hovering over the data points to discover more details about representation at the Oscars over time.</p>
+
+<svg width=1000 height=800></svg>
+
 <input type=button onClick="parent.location='index.html'"
  value='previous'>
 <input type=button onClick="parent.location='index3.html'"
  value='next'>
-
-<svg width=1000 height=800></svg>
 
 <body onload="init()"></body>
 <script>
@@ -17,7 +25,6 @@
         width = 800
         height = 600;
         let data = await d3.csv("https://jenniechoi.github.io/cs416_datavis/oscars.csv");
-        console.log(data);
 
         years = new Set();
         noms = [];
@@ -102,13 +109,13 @@
         .attr("cx", function(d,i) { return x(years_array[i]);})
         .attr("cy", function(d,i) { return y(nom_pcts[i]);})
         .attr('fill', 'green')
-        .attr("r",5)
+        .attr("r",5.25)
             .on("mouseover", function(d,i) {
                     d3.select(this).transition()
                     .duration(100)
-                    .attr("opacity",0.65);
+                    .style("opacity",0.65);
                     tooltip.style("opacity",1)
-                        .style("top", (d3.event.pageY-200) + "px")
+                        .style("top", (d3.event.pageY-250) + "px")
                         .style("left", (d3.event.pageX) + "px")
                         .html(years_array[i] + "</br>" +
                                 "Nominees: " + noms[i] + "</br>" +
@@ -116,14 +123,22 @@
                                 "Winners: " + wins[i] + "</br>" +
                                 "Percentage of Winners: " + Math.round(win_pcts[i]*10000)/100 + "%");
                 })
+                .on('mousemove', function(d) {
+                    d3.select(this).transition()
+                    .duration(10)
+                    .style("opacity",0.65);
+                    tooltip.style('top', (d3.event.pageY -250) + 'px')
+                    .style('left', (d3.event.pageX) + 'px');
+                })
                 .on("mouseout", function(d) {
                     d3.select(this).transition()
                         .duration(100)
-                        .attr("opacity",1);
+                        .style("opacity",1);
                     tooltip.transition()
                         .duration(100)
                         .style("opacity",0);
                 });
+                
 
         d3.select("svg")
         .attr("width", width+margin*2)
