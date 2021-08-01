@@ -3,6 +3,15 @@
 
 <h1>Representation of People of Color at the Oscars 1927 - 2019</h1>
 
+<p>
+    When we look at the breakdown in Oscar nominees by individual races we see that most of the gains have been made by Asians and Blacks.
+    Representation of Hispanics at the Oscars are still far too low, particularly since they make up 19% of the American population (a full 82 times smaller).
+    Asians are represented at the highest rate of all POC, boosted by nominees for foreign films like "Parasite" and "Crouching Tiger, Hidden Dragon". 
+    Representation of Blacks is 1/7th what it should be, but has seen considerable gains in recent years.
+</p>
+
+<p>Try hovering over the pie slices to discover more details about representation at the Oscars.</p>
+
 <svg width=1000 height=800></svg>
 
 <input type=button onClick="parent.location='index2.html'"
@@ -73,7 +82,8 @@
         var tooltip = d3.select("body").append("div")
             .attr("class","tooltip")
             .style("opacity",0)
-            .style("position", "absolute");
+            .style("position", "absolute")
+            .style("background", "white");
 
         d3.select("svg").append("text")
             .attr("class", "notes")
@@ -86,7 +96,7 @@
             .attr("transform","translate("+margin+")")
             .attr("x", 150)
             .attr("y", 775)
-            .text("Overwheling majority of nominees are White");
+            .text("Overwhelming majority of nominees are White");
         d3.select("svg").append("text")
             .attr("class", "notes")
             .attr("transform","translate("+margin+")")
@@ -94,17 +104,18 @@
             .attr("x", 250)
             .text("Hispanics are barely represented");
 
-        color = ["blue", "purple", "yellow", "orange"]
+        color = ["blue", "purple", "magenta", "orange"]
 
         var pie = d3.pie().value(function(d) { return d;});
         var arc = d3.arc().innerRadius(0).outerRadius(250);
 
-        svg = d3.select("svg")
+        var svg = d3.select("svg")
         .attr("width", width+margin*2)
         .attr("height", height+margin*2)
         .append("g")
-            .attr("transform","translate("+(margin+250)+","+(margin+400)+")")
-        .selectAll("path")
+            .attr("transform","translate("+(margin+250)+","+(margin+400)+")");
+        
+        var path = svg.selectAll("path")
         .data(pie(nom_pcts))
         .enter()
         .append("path")
@@ -113,11 +124,12 @@
         .attr("stroke", "black")
         .style("stroke-width","2px")
         .style("opacity", 1);
-        svg.on("mouseover", function(d,i) {
+        
+        path.on("mouseover", function(d,i) {
             d3.select(this).transition()
-            .duration(100)
-            .attr("opacity",0.65);
-            tooltip.style("opacity",1)
+            .duration(10)
+            .style("opacity",0.65);
+            tooltip.style("display", "block").style("opacity",2)
                 .style("top", (d3.event.pageY-250) + "px")
                 .style("left", (d3.event.pageX+200) + "px")
                 .html(races_array[i] + "</br>" +
@@ -127,13 +139,21 @@
                         "Percentage of Winners: " + Math.round(win_pcts[i]*10000)/100 + "%" + "</br>" + 
                         "Winningest Film: " + most_wins[i]);
         });
-        svg.on("mouseout", function(d) {
+        
+        path.on('mousemove', function(d) {
+            d3.select(this).transition()
+            .duration(10)
+            .style("opacity",0.65);
+            tooltip.style('top', (d3.event.pageY + 10) + 'px')
+			.style('left', (d3.event.pageX - 25) + 'px');
+		});
+        
+        path.on("mouseout", function(d) {
+            tooltip.style('display', 'none');
+			tooltip.style('opacity',0);
             d3.select(this).transition()
                 .duration(100)
-                .attr("opacity",1);
-            tooltip.transition()
-                .duration(100)
-                .style("opacity",0);
+                .style("opacity",1);
         });
 
 
