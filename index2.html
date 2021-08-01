@@ -16,8 +16,8 @@
         var margin = 100
         width = 800
         height = 600;
-        var foo = await d3.csv("https://jenniechoi.github.io/cs416_datavis/oscars.csv");
-        console.log(foo);
+        var data2 = await d3.csv("https://jenniechoi.github.io/cs416_datavis/oscars.csv");
+        console.log(data2);
 
         years = new Set();
         noms = [];
@@ -25,8 +25,8 @@
         winners = [];
         total_wins = [];
         total_noms = [];
-        for (var i = 0; i < data.length; i++) {
-            years.add(parseInt(data[i].year_film));
+        for (var i = 0; i < data2.length; i++) {
+            years.add(parseInt(data2[i].year_film));
         }
         years_array = Array.from(years);
         for (var i = 0; i < years_array.length; i++) {
@@ -36,13 +36,13 @@
             total_wins.push(0);
             winners.push('');
         }
-        for (var i = 0; i < data.length; i++) {
-            index = years_array.indexOf(parseInt(data[i].year_film));
+        for (var i = 0; i < data2.length; i++) {
+            index = years_array.indexOf(parseInt(data2[i].year_film));
             total_noms[index]++;
-            if (data[i].winner === "TRUE") {
+            if (data2[i].winner === "TRUE") {
                 total_wins[index]++;
             }
-            if (data[i].Race != "White") {
+            if (data2[i].Race != "White") {
                 noms[index]++;
                 if (data[i].winner === "TRUE") {
                     wins[index]++;
