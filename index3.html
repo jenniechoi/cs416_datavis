@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<script src="https://d3js.org/d3.v5.js"></script>
+
+<h1>Representation of People of Color at the Oscars 1927 - 2019</h1>
+
+<svg width=1000 height=800></svg>
+
+<input type=button onClick="parent.location='index2.html'"
+ value='previous'>
+
+<body onload="init()"></body>
+<script>
+    async function init() {
+        var margin = 100
+        width = 800
+        height = 600;
+        var data = await d3.csv("../oscars.csv");
+
+        races = new Set();
+        noms = [];
+        wins = [];
+        films = [];
+        total_wins = 0;
+        total_noms = 0;
+        for (var i = 0; i < data.length; i++) {
+            races.add(data[i].Race);
+        }
+        races_array = Array.from(races);
+        for (var i = 0; i < races_array.length; i++) {
+            noms.push(0);
+            wins.push(0);
+            films.push(new Map());
+        }
+        for (var i = 0; i < data.length; i++) {
+            index = races_array.indexOf(data[i].Race);
+            total_noms++;
+            noms[index]++;
+            if (data[i].winner === "TRUE") {
+                total_wins++;
+                wins[index]++;
+                if (data[i].film != "") { 
+                    if (films[index].has(data[i].film)) {
+                        cnt = films[index].get(data[i].film);
+                        films[index].set(data[i].film, cnt+1);
+                    } else {
+                        films[index].set(data[i].film,1);
+                    }
+                }
+            }
+        }
+        nom_pcts = [];
+        win_pcts = [];
+        for (var i = 0; i < noms.length; i++) {
+            nom_pcts.push(noms[i] / total_noms);
+            win_pcts.push(wins[i] / total_wins);
+        }
+
+        most_wins = [];
+        for (var i = 0; i < races_array.length; i++) {
+            max_wins = 0;
+            film_wins = '';
+            for (var [key, value] of films[i]) {
+                if (value > max_wins) {
+                    max_wins = value;
+                    film_wins = key;
+                } else if (value == max_wins) {
+                    film_wins = film_wins + ", " + key;
+                }
+            }
+            most_wins.push(film_wins);
+        }
+
+        var tooltip = d3.select("body").append("div")
+            .attr("class","tooltip")
+            .style("opacity",0)
+            .style("position", "absolute");
+
+        d3.select("svg").append("text")
+            .attr("class", "notes")
+            .attr("transform","translate("+margin+")")
+            .attr("x", 2)
+            .attr("y", 240)
+            .text("Asians and Blacks making strides");
+        d3.select("svg").append("text")
+            .attr("class", "notes")
+            .attr("transform","translate("+margin+")")
+            .attr("x", 150)
+            .attr("y", 775)
+            .text("Overwheling majority of nominees are White");
+        d3.select("svg").append("text")
+            .attr("class", "notes")
+            .attr("transform","translate("+margin+")")
+            .attr("y", 225)
+            .attr("x", 250)
+            .text("Hispanics are barely represented");
+
+        color = ["blue", "purple", "yellow", "orange"]
+
+        var pie = d3.pie().value(function(d) { return d;});
+        var arc = d3.arc().innerRadius(0).outerRadius(250);
+
+        svg = d3.select("svg")
+        .attr("width", width+margin*2)
+        .attr("height", height+margin*2)
+        .append("g")
+            .attr("transform","translate("+(margin+250)+","+(margin+400)+")")
+        .selectAll("path")
+        .data(pie(nom_pcts))
+        .enter()
+        .append("path")
+        .attr("d", arc)
+        .attr('fill', function(d,i) { return color[i];})
+        .attr("stroke", "black")
+        .style("stroke-width","2px")
+        .style("opacity", 1);
+        svg.on("mouseover", function(d,i) {
+            d3.select(this).transition()
+            .duration(100)
+            .attr("opacity",0.65);
+            tooltip.style("opacity",1)
+                .style("top", (d3.event.pageY-250) + "px")
+                .style("left", (d3.event.pageX+200) + "px")
+                .html(races_array[i] + "</br>" +
+                        "Nominees: " + noms[i] + "</br>" +
+                        "Percentage of Nominees: " + Math.round(nom_pcts[i]*10000)/100 + "%" + "</br>" +
+                        "Winners: " + wins[i] + "</br>" +
+                        "Percentage of Winners: " + Math.round(win_pcts[i]*10000)/100 + "%" + "</br>" + 
+                        "Winningest Film: " + most_wins[i]);
+        });
+        svg.on("mouseout", function(d) {
+            d3.select(this).transition()
+                .duration(100)
+                .attr("opacity",1);
+            tooltip.transition()
+                .duration(100)
+                .style("opacity",0);
+        });
+
+
+        leg = d3.select("svg")
+            .attr("width", width+margin*2)
+            .attr("height", height+margin*2)
+            .append("g")
+                .attr("transform","translate("+(margin-100)+","+(margin+100)+")")
+            .selectAll(".legend")
+            .data(pie(nom_pcts))
+            .enter().append("g")
+            .attr("transform", function(d,i) {
+                return "translate(" + (width-110) + "," + (i*30+20) + ")";
+            })
+            .attr("class","legend");
+        leg.append("rect")
+            .attr("width",20)
+            .attr("height",20)
+            .attr("fill", function(d,i) { return color[i];});
+        leg.append("text")
+            .text(function(d,i) { return races_array[i];})
+            .style("font-size",16)
+            .attr("y",15)
+            .attr("x",30);
+    }
+</script>

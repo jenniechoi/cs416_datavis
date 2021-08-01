@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<script src="https://d3js.org/d3.v5.js"></script>
+
+<!-- Add a title -->
+<h1>Representation of People of Color at the Oscars 1927 - 2019</h1>
+
+<!-- Add a bit of text -->
+
+<svg width=1000 height=800></svg>
+
+<input type=button onClick="parent.location='index.html'"
+ value='previous'>
+<input type=button onClick="parent.location='index3.html'"
+ value='next'>
+
+<body onload="init()"></body>
+<script>
+    async function init() {
+        var margin = 100
+        width = 800
+        height = 600;
+        var data = await d3.csv("../oscars.csv");
+
+        years = new Set();
+        noms = [];
+        wins = [];
+        winners = [];
+        total_wins = [];
+        total_noms = [];
+        for (var i = 0; i < data.length; i++) {
+            years.add(parseInt(data[i].year_film));
+        }
+        years_array = Array.from(years);
+        for (var i = 0; i < years_array.length; i++) {
+            noms.push(0);
+            wins.push(0);
+            total_noms.push(0);
+            total_wins.push(0);
+            winners.push('');
+        }
+        for (var i = 0; i < data.length; i++) {
+            index = years_array.indexOf(parseInt(data[i].year_film));
+            total_noms[index]++;
+            if (data[i].winner === "TRUE") {
+                total_wins[index]++;
+            }
+            if (data[i].Race != "White") {
+                noms[index]++;
+                if (data[i].winner === "TRUE") {
+                    wins[index]++;
+                    winners[index] = winners[index] + data[i].name + ', ';
+                }
+            }
+        }
+        nom_pcts = []
+        win_pcts = []
+        for (var i = 0; i < noms.length; i++) {
+            nom_pcts.push(noms[i] / total_noms[i]);
+            win_pcts.push(wins[i] / total_wins[i]);
+        }
+
+        var y = d3.scaleLinear().domain([0,1]).range([height,0]);
+        var x = d3.scaleLinear().domain([1927,2019]).range([0,width]);
+
+        var tooltip = d3.select("body").append("div")
+            .attr("class","tooltip")
+            .style("opacity",0)
+            .style("position", "absolute");
+
+        d3.select("svg").append("text")
+            .attr("class", "notes")
+            .attr("transform","translate("+margin+")")
+            .attr("x", 30)
+            .attr("y", 650)
+            .text("Initially very few POC nominees");
+        d3.select("svg").append("text")
+            .attr("class", "notes")
+            .attr("transform","translate("+margin+")")
+            .attr("x", 400)
+            .attr("y", 600)
+            .text("Representation rises in 1980s");
+        d3.select("svg").append("text")
+            .attr("class", "notes")
+            .attr("transform","translate("+margin+")")
+            .attr("y", 550)
+            .attr("x", 650)
+            .text("Sustained bump from 2016");
+
+        var line = d3.line()
+            .x(function(d,i) { return x(years_array[i]);})
+            .y(function(d,i) { return y(nom_pcts[i]);});
+
+        tick_vals = [1930,1940,1950,1960,1970,1980,1990,2000,2010];
+
+        d3.select("svg")
+        .attr("width", width+margin*2)
+        .attr("height", height+margin*2)
+        .append("g")
+            .attr("transform","translate("+margin+","+margin+")")
+        .selectAll("circle")
+        .data(years_array)
+        .enter()
+        .append("circle")
+        .attr("cx", function(d,i) { return x(years_array[i]);})
+        .attr("cy", function(d,i) { return y(nom_pcts[i]);})
+        .attr('fill', 'green')
+        .attr("r",5)
+            .on("mouseover", function(d,i) {
+                    d3.select(this).transition()
+                    .duration(100)
+                    .attr("opacity",0.65);
+                    tooltip.style("opacity",1)
+                        .style("top", (d3.event.pageY-200) + "px")
+                        .style("left", (d3.event.pageX) + "px")
+                        .html(years_array[i] + "</br>" +
+                                "Nominees: " + noms[i] + "</br>" +
+                                "Percentage of Nominees: " + Math.round(nom_pcts[i]*10000)/100 + "%" + "</br>" +
+                                "Winners: " + wins[i] + "</br>" +
+                                "Percentage of Winners: " + Math.round(win_pcts[i]*10000)/100 + "%");
+                })
+                .on("mouseout", function(d) {
+                    d3.select(this).transition()
+                        .duration(100)
+                        .attr("opacity",1);
+                    tooltip.transition()
+                        .duration(100)
+                        .style("opacity",0);
+                });
+
+        d3.select("svg")
+        .attr("width", width+margin*2)
+        .attr("height", height+margin*2)
+        .append("g")
+            .attr("transform","translate("+margin+","+margin+")")
+        .selectAll("path")
+        .data(years_array)
+        .enter()
+        .append("path")
+        .attr("d", line(years_array))
+        .attr("x", function(d,i) { return x(years_array[i]);})
+        .attr("y", function(d,i) { return y(nom_pcts[i]);})
+        .attr('stroke', 'green')
+        .attr('fill', 'none')   
+        .attr("stroke-width", 3);
+        
+        d3.select("svg")
+            .append("text")
+            .attr("transform", "translate(" + (width/2+margin) + " ," + (height+margin+50)+ ")")
+            .style("text-anchor","middle")
+            .style("font-size", 25)
+            .text("Year");
+
+        d3.select("svg")
+            .append("text")
+            .attr("transform", 
+                "translate(" + 50 + " ," + (margin+300)+ ") rotate(270)")
+            .style("text-anchor","middle")
+            .text("Percent of Nominees")
+            .style("font-size", 25);
+
+        d3.select("svg").append("g")
+          .attr("transform","translate("+margin+","+margin+")")
+          .call(d3.axisLeft(y))
+          .style("font-size","15px");
+
+        d3.select("svg").append("g")
+        .attr("transform","translate("+margin+","+(height+margin)+")")
+        .call(d3.axisBottom(x)
+        .scale(x)
+        .tickValues(tick_vals)
+        .tickFormat(function(d,i) {return tick_vals[i];}))
+        .style("font-size","15px");
+        
+    }
+</script>
